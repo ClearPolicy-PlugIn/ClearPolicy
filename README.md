@@ -18,8 +18,9 @@ ClearPolicy is a lightweight Chrome extension that automatically detects privacy
    Clone this repository to your local machine:
 
    ```bash
-   git clone https://github.com/yourusername/clearpolicy.git
-   cd clearpolicy
+   git clone https://github.com/ClearPolicy-PlugIn/ClearPolicy.git
+
+   cd ClearPolicy
    ```
 
 2. **Load the Extension in Chrome**
