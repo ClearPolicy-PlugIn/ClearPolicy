@@ -1,0 +1,1 @@
+//Content script injected into web pages
