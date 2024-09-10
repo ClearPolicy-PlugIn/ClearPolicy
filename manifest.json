@@ -1,3 +1,10 @@
 {
-    "_comment": "Configuration file for the Chrome extension"
+    "manifest_version": 3,
+    "name": "Clear Policy",
+    "description": "...",
+    "version": "1.0",
+    "action": {
+        "default_popup": "popup.html",
+        "default_icon": "icons/icons.png"
+    }
 }
