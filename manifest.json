@@ -1,9 +1,10 @@
 {
   "manifest_version": 3,
-  "name": "Clear Policy",
+  "name": "ClearPolicy: Summarize the Terms & Conditions of Online Services ",
   "description": "...",
   "version": "1.0",
   "action": {
-    "default_popup": "popup.html"
+    "default_popup": "popup.html",
+    "default_icon": "icons/icon.png"
   }
 }
