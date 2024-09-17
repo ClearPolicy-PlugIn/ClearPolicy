@@ -13,7 +13,7 @@ const openai = new OpenAI({
 // Token limits for each model
 const TOKEN_LIMITS = {
   'gpt-4o-mini': { contextWindow: 128000, maxOutputTokens: 16384 },  // GPT-4o-mini
-  'gpt-4o': { contextWindow: 128000, maxOutputTokens: 4096 },        // GPT-4o
+  'gpt-4o-2024-08-06': { contextWindow: 128000, maxOutputTokens: 16384 },  // Updated GPT-4o version
 };
 
 // Helper function to convert characters to tokens
@@ -28,7 +28,6 @@ async function summarizePolicy(privacyPolicyText) {
     // Calculate total tokens required
     const totalTokens = charsToTokens(privacyPolicyText.length);
 
-    console.log(`Total tokens for the policy: ${totalTokens}`)
     // Determine how many chunks we need based on the context window
     const maxInputTokens = contextWindow - maxOutputTokens;
     const numChunks = Math.ceil(totalTokens / maxInputTokens);
@@ -87,7 +86,6 @@ async function main() {
 
     // Print the number of tokens
     const totalTokens = charsToTokens(privacyPolicyText.length);
-    console.log(`Total tokens in the policy file: ${totalTokens}`);
 
     // Summarize the content
     await summarizePolicy(privacyPolicyText);
