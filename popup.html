@@ -2,23 +2,37 @@
 <html>
   <head>
     <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="popup.css" />
   </head>
   <body>
-    <header>
-      <h1 class="text-primary">Clear Policy</h1>
-    </header>
+    <div class="popup-box shadow-sm">
+      <button
+        type="button"
+        class="btn-close close-btn btn-sm"
+        aria-label="Close"
+      ></button>
 
-    <section>
-      <ul>
-        <li>Test</li>
-        <li>Test</li>
-        <li>Test</li>
-      </ul>
-    </section>
+      <header class="mb-3">
+        <!-- Logo on top -->
+        <img src="icons/icon.png" alt="Clear Policy Logo" />
+        <!-- Title -->
+        <h1 class="text-primary">ClearPolicy</h1>
+      </header>
 
-    <footer>
-      <p>&copy; 2024 ClearPolicy</p>
-    </footer>
+      <section>
+        <!-- Middle content -->
+        <p class="text-muted">We detected terms & conditions</p>
+      </section>
+
+      <!-- Button at the bottom -->
+      <div class="button-container">
+        <button class="btn btn-primary btn-lg button1" id="see-more-btn">
+          No Thanks!
+        </button>
+
+        <button class="btn btn-primary btn-lg">Click to see more!</button>
+      </div>
+    </div>
     <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
     <script src="popup.js"></script>
   </body>
