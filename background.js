@@ -10,25 +10,69 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,  // Loaded from the .env file
 });
 
+// Token limits for each model
+const TOKEN_LIMITS = {
+  'gpt-4o-mini': { contextWindow: 128000, maxOutputTokens: 16384 },  // GPT-4o-mini
+  'gpt-4o': { contextWindow: 128000, maxOutputTokens: 4096 },        // GPT-4o
+};
+
+// Helper function to convert characters to tokens
+const charsToTokens = (chars) => Math.ceil(chars / 4);
+
 // Function to summarize the privacy policy using OpenAI Chat Completion
 async function summarizePolicy(privacyPolicyText) {
   try {
-    // Call OpenAI API to summarize the privacy policy using chat completion
-    const completion = await openai.chat.completions.create({
-      model: 'gpt-3.5-turbo-16k',  // Using gpt-3.5-turbo-16k to handle longer text
-      messages: [
-        { role: 'system', content: 'You are a helpful assistant that summarizes privacy policies.' },
-        { role: 'user', content: `Please summarize the following privacy policy in a concise and easy-to-understand manner for users:\n\n"${privacyPolicyText}"\n\nHighlight key points about data collection, user rights, and security.` }
-      ],
-      max_tokens: 500,  // Limit the response to 500 tokens
-      temperature: 0.7,  // Adjust creativity level
-    });
+    const model = process.env.MODEL_VERSION || 'gpt-4o-mini';  // Get the model from environment
+    const { contextWindow, maxOutputTokens } = TOKEN_LIMITS[model];  // Get token limits for the model
 
-    const summary = completion.choices[0].message.content.trim();
+    // Calculate total tokens required
+    const totalTokens = charsToTokens(privacyPolicyText.length);
+    
+    // Determine how many chunks we need based on the context window
+    const maxInputTokens = contextWindow - maxOutputTokens;
+    const numChunks = Math.ceil(totalTokens / maxInputTokens);
+
+    console.log(`Model: ${model}, Total Tokens: ${totalTokens}, Chunks: ${numChunks}`);
+
+    let summarizedContent = '';
+
+    // Split text into chunks and make multiple API calls
+    for (let i = 0; i < numChunks; i++) {
+      const start = i * maxInputTokens * 4;  // Multiply by 4 to convert tokens to characters
+      const end = start + maxInputTokens * 4;  // End character for the current chunk
+      const chunk = privacyPolicyText.slice(start, end);
+
+      console.log(`Summarizing chunk ${i + 1} of ${numChunks}...`);
+
+      // Construct the targeted prompt
+      const completion = await openai.chat.completions.create({
+        model: model,  // Use the selected model
+        messages: [
+          { role: 'system', content: 'You are a helpful assistant that summarizes privacy policies.' },
+          { 
+            role: 'user', 
+            content: `Please summarize the following privacy policy by focusing only on the following aspects:
+            - **Data Collection**: What personal data is being collected, and how is it collected?
+            - **Data Usage**: How is the collected data being used, and for what purposes?
+            - **Data Sharing**: Is the data being shared with third parties, and if so, who are they?
+            - **User Rights**: What rights do users have regarding their data, and how can they exercise these rights?
+            - **Data Retention**: How long is the collected data retained?
+            - **Waiving Rights**: Are users waiving any of their rights by accepting the policy?
+
+            Provide the summary in bullet point format, with no more than 2-3 sentences per bullet point, highlighting only the most important and actionable information.` 
+          }
+        ],
+        max_tokens: maxOutputTokens,  // Limit the response to model-specific output tokens
+        temperature: 0.7,  // Adjust creativity level
+      });
+
+      summarizedContent += completion.choices[0].message.content.trim() + '\n';
+    }
 
     // Print the summarized result to the console
     console.log("Summarized Privacy Policy:\n");
-    console.log(summary);
+    console.log(summarizedContent);
+
   } catch (error) {
     console.error('Error with OpenAI API:', error);
   }
