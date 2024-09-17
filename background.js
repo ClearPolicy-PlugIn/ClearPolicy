@@ -27,7 +27,8 @@ async function summarizePolicy(privacyPolicyText) {
 
     // Calculate total tokens required
     const totalTokens = charsToTokens(privacyPolicyText.length);
-    
+
+    console.log(`Total tokens for the policy: ${totalTokens}`)
     // Determine how many chunks we need based on the context window
     const maxInputTokens = contextWindow - maxOutputTokens;
     const numChunks = Math.ceil(totalTokens / maxInputTokens);
@@ -82,7 +83,11 @@ async function summarizePolicy(privacyPolicyText) {
 async function main() {
   try {
     // Read the policy file
-    const privacyPolicyText = await fs.readFile('policies/netflix_policy.txt', 'utf8');
+    const privacyPolicyText = await fs.readFile('policies/discord_policy.txt', 'utf8');
+
+    // Print the number of tokens
+    const totalTokens = charsToTokens(privacyPolicyText.length);
+    console.log(`Total tokens in the policy file: ${totalTokens}`);
 
     // Summarize the content
     await summarizePolicy(privacyPolicyText);
