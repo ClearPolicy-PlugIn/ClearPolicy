@@ -6,7 +6,7 @@ ClearPolicy is a lightweight Chrome extension that automatically detects privacy
 ## Features
 
 - **Automatic Detection**: Instantly detects when a privacy policy is present on a web page.
-- **Simplified Summaries**: Provides a clear and concise summary of the privacy policy using CloudAI.
+- **Simplified Summaries**: Provides a clear and concise summary of the privacy policy using OpenAI.
 - **Seamless Integration**: The summary is displayed in a clean, user-friendly popup within the browser.
 
 ## Installation
@@ -74,7 +74,7 @@ ClearPolicy/
 │   ├── icon48.png
 │   └── icon128.png
 └── utils/
-    └── api.js            # CloudAI interaction script
+    └── api.js            # OpenAI interaction script
 ```
 
 ## License
