@@ -1,7 +1,7 @@
 {
   "name": "clearpolicy",
   "version": "1.0.0",
-  "description": "ClearPolicy is a lightweight Chrome extension that automatically detects privacy policies on websites and provides a simplified summary using the Claude.ai API.",
+  "description": "ClearPolicy is a lightweight Chrome extension that automatically detects privacy policies on websites and provides a simplified summary using the Open.ai API.",
   "main": "index.js",
   "type": "module", 
   "scripts": {
@@ -16,7 +16,7 @@
     "privacy-policy",
     "privacy",
     "policy-summarization",
-    "Claude-ai",
+    "Open-ai",
     "policy-parser",
     "web-extension",
     "javascript",
