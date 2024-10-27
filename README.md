@@ -56,7 +56,11 @@ ClearPolicy is a lightweight Chrome extension that automatically detects privacy
 2. **Load the Extension**
 
    Follow the steps in the "Installation" section to load the extension in Chrome for local development and testing.
+3. Start the server to parse the code effectively
 
+   ```bash
+   npm start
+   ```
 ### Project Structure
 
 ```plaintext

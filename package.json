@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "ClearPolicy is a lightweight Chrome extension that automatically detects privacy policies on websites and provides a simplified summary using the Open.ai API.",
   "main": "index.js",
-  "type": "module", 
+  "type": "module",
   "scripts": {
+    "start": "node server.js",
     "test": "jest"
   },
   "repository": {
@@ -30,7 +31,10 @@
   },
   "homepage": "https://github.com/ClearPolicy-PlugIn/ClearPolicy#readme",
   "dependencies": {
+    "body-parser": "^1.20.3",
+    "cors": "^2.8.5",
     "dotenv": "^16.4.5",
+    "express": "^4.21.1",
     "openai": "^4.61.1"
   }
 }
