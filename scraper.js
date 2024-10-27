@@ -104,19 +104,32 @@ function splitTextIntoChunks(text, maxLength) {
     return chunks;
 }
 
-// Function to send the extracted and cleaned terms content to the server
+// Function to send the terms to the server
+// Function to send the extracted terms content to the server
 async function sendTermsToServer(cleanText) {
     try {
-        const response = await fetch('http://localhost:3000/process-terms', {
+        const response = await fetch('http://localhost:3001/process-terms', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ termsContent: cleanText }), // Send the cleaned text
+            body: JSON.stringify({ termsContent: cleanText }),
         });
-        
         const data = await response.json();
-        console.log('Response from server:', data.summary);
+        console.log("Response from server:", data); // Log the full response
+
+        if (data.concerns) {
+            console.log('Concerns from server:', data.concerns);
+            
+            // Send the concerns to the background script, which will store them
+            chrome.runtime.sendMessage({
+                action: 'displayConcerns',
+                concerns: data.concerns,  // Ensure this contains the correct data
+            });
+        } else {
+            console.error('Error: Concerns are undefined in the response');
+        }
+
     } catch (error) {
         console.error('Error sending terms to server:', error);
     }

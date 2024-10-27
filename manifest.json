@@ -1,16 +1,20 @@
 {
   "manifest_version": 3,
-  "name": "ClearPolicy: Summarize the Terms & Conditions of Online Services ",
+  "name": "ClearPolicy: Summarize the Terms & Conditions of Online Services",
   "description": "...",
   "version": "1.0",
   "action": {
     "default_popup": "popup.html",
     "default_icon": "icons/icon.png"
   },
+  "background": {
+    "service_worker": "background.js"
+  },
   "permissions": [
     "activeTab",               
     "scripting",               
-    "https://help.netflix.com/*"
+    "https://help.netflix.com/*",
+    "storage" 
   ],
   "host_permissions": [
     "*://*/*"                  
@@ -22,4 +26,3 @@
     }
   ]
 }
-
