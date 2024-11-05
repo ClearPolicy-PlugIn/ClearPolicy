@@ -105,7 +105,6 @@ function splitTextIntoChunks(text, maxLength) {
 }
 
 // Function to send the terms to the server
-// Function to send the extracted terms content to the server
 async function sendTermsToServer(cleanText) {
     try {
         const response = await fetch('http://localhost:3001/process-terms', {
@@ -120,11 +119,19 @@ async function sendTermsToServer(cleanText) {
 
         if (data.concerns) {
             console.log('Concerns from server:', data.concerns);
-            
-            // Send the concerns to the background script, which will store them
-            chrome.runtime.sendMessage({
-                action: 'displayConcerns',
-                concerns: data.concerns,  // Ensure this contains the correct data
+
+            // Retrieve existing concerns and append new concerns
+            chrome.storage.local.get({ concerns: [] }, (result) => {
+                const existingConcerns = result.concerns || [];
+                const updatedConcerns = [...existingConcerns, ...data.concerns]; // Append new concerns
+
+                // Store the updated concerns in local storage
+                chrome.storage.local.set({ concerns: updatedConcerns }, () => {
+                    console.log('Stored updated concerns:', updatedConcerns);
+
+                    // After processing and storing concerns, open the popup
+                    chrome.action.openPopup();
+                });
             });
         } else {
             console.error('Error: Concerns are undefined in the response');
@@ -134,6 +141,15 @@ async function sendTermsToServer(cleanText) {
         console.error('Error sending terms to server:', error);
     }
 }
+
+
+// Clear stored concerns when the page is reloaded
+window.addEventListener('load', () => {
+    chrome.storage.local.clear(() => {
+        console.log('Previous session concerns cleared on page reload.');
+    });
+});
+
 
 // Example usage: Call the function to start the process
 findTermsOfUseLinkAndFetchContent();

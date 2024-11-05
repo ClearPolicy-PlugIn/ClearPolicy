@@ -1,21 +1,30 @@
-// When the server response is received
+// Append new concerns to the existing list in chrome.storage
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'displayConcerns') {
-      // Send a message to the popup to display concerns
-      chrome.runtime.sendMessage({
-          action: 'displayConcerns',
-          concerns: message.concerns // Pass the concerns data here
+  if (message.action === 'storeConcerns') {
+      chrome.storage.local.get('concerns', (data) => {
+          const currentConcerns = data.concerns || [];  // Get existing concerns or an empty array
+          const updatedConcerns = [...currentConcerns, ...message.concerns];  // Append new concerns
+
+          // Save the updated concerns back to storage
+          chrome.storage.local.set({ concerns: updatedConcerns }, () => {
+              console.log('Concerns updated in storage:', updatedConcerns);
+          });
       });
   }
 });
 
-// Store and handle concerns
+// Listen for popup requests to retrieve stored concerns
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'getConcerns') {
-      // Logic to return concerns stored in chrome's local storage or a variable
-      chrome.storage.local.get(['concerns'], (result) => {
-          sendResponse({ concerns: result.concerns });
+      chrome.storage.local.get('concerns', (data) => {
+          sendResponse(data.concerns || []);
       });
-      return true; // Ensures sendResponse is asynchronous
+      return true;  // Indicates that the response will be asynchronous
   }
 });
+
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'openResults') {
+    chrome.tabs.create({ url: chrome.runtime.getURL('results.html') });
+  }
+});ç

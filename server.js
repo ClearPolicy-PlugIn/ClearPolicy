@@ -29,69 +29,93 @@ const TOKEN_LIMITS = {
 // Helper function to convert characters to tokens
 const charsToTokens = (chars) => Math.ceil(chars / 4);
 
-// Function to summarize the Terms of Use or privacy policy
+// Deduplication to avoid repetitive concerns
+function deduplicateConcerns(concernsList) {
+    const finalConcerns = [];
+    concernsList.forEach(concern => {
+        const alreadyExists = finalConcerns.some(existingConcern => 
+            existingConcern.toLowerCase().includes(concern.toLowerCase())
+        );
+        if (!alreadyExists) {
+            finalConcerns.push(concern);
+        }
+    });
+    return finalConcerns;
+}
+
+// Summarize Terms of Use and avoid repeated concerns across chunks
 async function summarizePolicy(termsText) {
     try {
-      const model = 'gpt-4o-mini';  // You can choose the model version
-      const { contextWindow, maxOutputTokens } = TOKEN_LIMITS[model];  // Use token limits for the model
-  
-      // Calculate total tokens for the input text
-      const totalTokens = charsToTokens(termsText.length);
-  
-      // Determine how many chunks are needed based on the context window
-      const maxInputTokens = contextWindow - maxOutputTokens;
-      const numChunks = Math.ceil(totalTokens / maxInputTokens);
-  
-      let concernsList = [];
-  
-      // Split the text into chunks and make multiple API calls
-      for (let i = 0; i < numChunks; i++) {
-        const start = i * maxInputTokens * 4;
-        const end = start + maxInputTokens * 4;
-        const chunk = termsText.slice(start, end);
-  
-        console.log(`Summarizing chunk ${i + 1} of ${numChunks}...`);
-  
-        // Make the OpenAI API request
-        const completion = await openai.chat.completions.create({
-          model: model,
-          messages: [
-            { role: 'system', content: 'You are a legal expert specializing in identifying problematic clauses in Terms of Use documents.' },
-            {
-              role: 'user',
-              content: `You are a legal expert reviewing a Terms of Use document. 
-              Please identify and summarize only the problematic or concerning sections of the following Terms of Use chunk. 
-              Focus on sections that may negatively impact user rights or privacy, such as:
-              - **Data Collection**: Any invasive or excessive data collection practices.
-              - **Data Usage**: Any use of data that could compromise privacy or security.
-              - **Data Sharing**: Sharing data with third parties that may violate user expectations.
-              - **User Rights**: Clauses that limit user rights or impose unreasonable restrictions.
-              - **Retention**: Terms that involve retaining user data for an unusually long time.
-              - **Waiving Rights**: Any waivers of important legal rights.
-  
-              Ignore any benign or standard terms that are commonly acceptable. Summarize only the concerning parts in the chunk below:
-              ${chunk}` 
-            }
-          ],
-          max_tokens: maxOutputTokens,
-          temperature: 0.7,
-        });
-  
-        // Treat the completion content as plain text
-        const chunkConcerns = completion.choices[0].message.content.trim();
-        
-        // Optional: Here you can process the chunkConcerns further if necessary to structure it
-        concernsList.push({ chunk: i + 1, concerns: chunkConcerns });
-      }
-  
-      return concernsList;  // Return the list of concerns for all chunks
-  
+        const model = 'gpt-4o-mini';
+        const { contextWindow, maxOutputTokens } = TOKEN_LIMITS[model];
+
+        const totalTokens = charsToTokens(termsText.length);
+        const maxInputTokens = contextWindow - maxOutputTokens;
+        const numChunks = Math.ceil(totalTokens / maxInputTokens);
+
+        let concernsList = [];
+        let previousConcerns = [];  // Track all previous concerns to avoid repetition
+
+        // Process each chunk
+        for (let i = 0; i < numChunks; i++) {
+            const start = i * maxInputTokens * 4;
+            const end = start + maxInputTokens * 4;
+            const chunk = termsText.slice(start, end);
+
+            console.log(`Summarizing chunk ${i + 1} of ${numChunks}...`);
+
+            // Use previously identified concerns in the prompt
+            const previousConcernsText = previousConcerns.length > 0 
+                ? `Previously identified concerns: ${previousConcerns.join(', ')}. Please do not repeat them.`
+                : `No concerns have been identified so far.`;
+
+            const completion = await openai.chat.completions.create({
+                model: model,
+                messages: [
+                    { role: 'system', content: 'You are a legal expert specializing in identifying problematic clauses in Terms of Use documents.' },
+                    {
+                        role: 'user',
+                        content: `You are a legal expert reviewing a Terms of Use document. 
+                          Summarize in very simple language 2 bullet points only the **most critical and unique** concerns related to user rights or privacy. 
+                          Focus on issues such as:
+                          - Invasive or excessive data collection
+                          - Privacy or security concerns
+                          - Sharing data with third parties
+                          - Clauses that restrict user rights
+                          - Unusually long data retention periods
+                          - Waiving important legal rights
+
+                          here are the previous concerns you identified, do not repeat them in your next response
+
+                          ${previousConcernsText}
+
+                          **Provide the new concerns in short, distinct bullet points. Do not repeat any previously identified concerns. Keep it succinct and focused.**
+
+                          Terms of Use chunk:
+                          ${chunk}`
+                    }
+                ],
+                max_tokens: maxOutputTokens,
+                temperature: 0.7,
+            });
+
+            const chunkConcerns = completion.choices[0].message.content.trim();
+
+            // Add new concerns and track them
+            concernsList.push(chunkConcerns);
+            previousConcerns.push(chunkConcerns);
+        }
+
+        // Perform deduplication to ensure final output is unique
+        const uniqueConcerns = deduplicateConcerns(concernsList);
+
+        return uniqueConcerns;  // Return the deduplicated concerns
+
     } catch (error) {
-      console.error('Error with OpenAI API:', error);
-      throw new Error('Failed to summarize the Terms of Use');
+        console.error('Error with OpenAI API:', error);
+        throw new Error('Failed to summarize the Terms of Use');
     }
-  }
-  
+}
 
 // POST route to process the Terms of Use content
 app.post('/process-terms', async (req, res) => {
