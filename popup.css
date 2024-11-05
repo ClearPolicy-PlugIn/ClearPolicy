@@ -1,4 +1,4 @@
-/* Stylesheet for the popup UI */
+/* popup.css */
 
 .popup-box {
   width: 400px;
@@ -6,7 +6,9 @@
   border-radius: 10px;
   background-color: #f8f9fa;
   text-align: center;
+  position: relative; /* Needed for close button positioning */
 }
+
 header {
   display: flex;
   align-items: center;
@@ -19,22 +21,32 @@ header img {
   margin-right: 10px;
   margin-bottom: 10px;
 }
+
 header h1 {
   font-size: 1.5rem;
-}
-p {
-  font-size: 1rem;
-  margin-top: 15px;
-}
-button {
-  margin-top: 25px;
 }
 
 .close-btn {
   position: absolute;
+  top: 10px;
   right: 10px;
-  margin-top: 0;
-  font-size: 20px;
-  width: 5px;
-  height: 5px;
+  font-size: 16px;
+  width: 24px;
+  height: 24px;
+}
+
+.concern-item {
+  text-align: left;
+  margin-bottom: 15px;
+}
+
+.concern-title {
+  font-size: 1.1rem;
+  font-weight: bold;
+  color: #dc3545; /* Bootstrap danger color */
+}
+
+.concern-description {
+  font-size: 0.9rem;
+  color: #212529;
 }
