@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ClearPolicy: Summarize the Terms & Conditions of Online Services",
-  "description": "...",
+  "description": "An extension to summarize Terms of Use and Privacy Policies.",
   "version": "1.0",
   "action": {
     "default_popup": "popup.html",
@@ -11,13 +11,18 @@
     "service_worker": "background.js"
   },
   "permissions": [
-    "activeTab",               
-    "scripting",               
-    "https://help.netflix.com/*",
-    "storage" 
+    "activeTab",
+    "scripting",
+    "storage"
   ],
   "host_permissions": [
-    "*://*/*"                  
+    "https://clearpolicy-backend.vercel.app/*",
+    "https://signup.com/*",
+    "https://disneytermsofuse.com/*",
+    "https://open.spotify.com/*",
+    "https://www.chase.com/*",
+    "https://promotions.bankofamerica.com/*",
+    "https://www.fidelity.com/*"
   ],
   "content_scripts": [
     {
