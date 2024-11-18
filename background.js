@@ -1,11 +1,22 @@
 // background.js
 
+// Helper function to send messages safely
+function sendMessageToContentScript(tabId, message) {
+  chrome.tabs.sendMessage(tabId, message, (response) => {
+    if (chrome.runtime.lastError) {
+      console.warn('Error sending message to content script:', chrome.runtime.lastError);
+    } else {
+      // Handle response if necessary
+    }
+  });
+}
+
 // Process terms content by sending it to the backend for GPT processing
-async function processTermsContent(termsContent) {
+async function processTermsContent(termsContent, tabId) {
   console.log("Sending terms content to backend for GPT processing.");
 
-  // Inform the popup that processing has started
-  chrome.runtime.sendMessage({ action: 'processingStarted' });
+  // Inform the content script that processing has started
+  sendMessageToContentScript(tabId, { action: 'processingStarted' });
 
   try {
     const response = await fetch('https://clearpolicy-backend.vercel.app/api/process-terms', {
@@ -26,26 +37,26 @@ async function processTermsContent(termsContent) {
     const concerns = data.concerns;
 
     if (concerns && concerns.length > 0) {
-      // Store concerns in chrome.storage.local
+      // Store concerns in chrome.storage.local if needed
       chrome.storage.local.set({ concerns }, () => {
         console.log("Concerns stored successfully.");
 
-        // Inform the popup that processing is complete
-        chrome.runtime.sendMessage({
+        // Inform the content script that processing is complete
+        sendMessageToContentScript(tabId, {
           action: 'processingComplete',
           concerns: concerns,
         });
       });
     } else {
       console.error("No concerns received from backend.");
-      chrome.runtime.sendMessage({
+      sendMessageToContentScript(tabId, {
         action: 'processingError',
         message: 'No concerns found in the Terms of Use.',
       });
     }
   } catch (error) {
     console.error("Error processing terms content:", error);
-    chrome.runtime.sendMessage({
+    sendMessageToContentScript(tabId, {
       action: 'processingError',
       message: error.message || 'An error occurred while processing.',
     });
@@ -55,13 +66,9 @@ async function processTermsContent(termsContent) {
 // Listener for messages from content script
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'processTerms') {
-    processTermsContent(message.termsContent);
+    const tabId = sender.tab.id;
+    processTermsContent(message.termsContent, tabId);
     sendResponse({ status: 'processingStarted' });
-    return true;
-  } else if (message.action === 'getConcerns') {
-    chrome.storage.local.get(['concerns'], result => {
-      sendResponse({ concerns: result.concerns });
-    });
     return true;
   }
 });

@@ -4,7 +4,6 @@ document.addEventListener('DOMContentLoaded', function () {
   M.FormSelect.init(selects);
 });
 
-// Function to display concerns in the popup
 function displayConcerns(concerns) {
   const concernsContainer = document.getElementById('concerns-container');
   const loadingIndicator = document.getElementById('loading-indicator');
@@ -15,6 +14,7 @@ function displayConcerns(concerns) {
   errorContainer.style.display = 'none';
 
   if (concernsContainer) {
+    concernsContainer.style.display = 'block'; // Add this line to show the container
     concernsContainer.innerHTML = ''; // Clear existing content
 
     if (concerns.length === 0) {

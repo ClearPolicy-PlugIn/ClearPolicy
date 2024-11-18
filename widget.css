@@ -1,0 +1,59 @@
+/* widget.css */
+
+#clearpolicy-widget {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 350px;
+    max-height: 80vh;
+    overflow-y: auto;
+    background-color: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    z-index: 9999;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    font-family: Arial, sans-serif;
+  }
+  
+  .cp-widget-content {
+    position: relative;
+    padding: 15px;
+  }
+  
+  .cp-widget-close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    font-size: 20px;
+    cursor: pointer;
+  }
+  
+  .cp-widget-body {
+    margin-top: 10px;
+  }
+  
+  .cp-widget-loading {
+    text-align: center;
+  }
+  
+  .cp-widget-message {
+    margin-top: 10px;
+  }
+  
+  .cp-widget-message .card {
+    margin-bottom: 10px;
+  }
+  
+  .cp-widget-message .card-title {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #dc3545; /* Bootstrap danger color */
+  }
+  
+  .cp-widget-message .card-text {
+    font-size: 0.9rem;
+    color: #212529;
+  }
+  

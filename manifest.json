@@ -16,18 +16,19 @@
     "storage"
   ],
   "host_permissions": [
-    "https://clearpolicy-backend.vercel.app/*",
-    "https://signup.com/*",
-    "https://disneytermsofuse.com/*",
-    "https://open.spotify.com/*",
-    "https://www.chase.com/*",
-    "https://promotions.bankofamerica.com/*",
-    "https://www.fidelity.com/*"
+    "<all_urls>"
   ],
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["scraper.js"]
+      "js": ["scraper.js"],
+      "run_at": "document_idle"
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["widget.css"],
+      "matches": ["<all_urls>"]
     }
   ]
 }
