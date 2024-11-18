@@ -50,3 +50,42 @@ header h1 {
   font-size: 0.9rem;
   color: #212529;
 }
+
+#overview-container {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 20px;
+  background-color: #f9f9f9;
+}
+
+#filter-sort-container {
+  margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+}
+
+#concerns-container {
+  margin-top: 20px;
+}
+
+.concern-item {
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+}
+
+.critical {
+  background-color: #ffe6e6;
+  border-color: #ff4d4d;
+}
+
+.moderate {
+  background-color: #fff5cc;
+  border-color: #ffcc00;
+}
+
+.data-collection, .user-rights {
+  background-color: #e6f7ff;
+  border-color: #91d5ff;
+}

@@ -1,29 +1,68 @@
 <!-- popup.html -->
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
-    <link rel="stylesheet" href="bootstrap/css/bootstrap.min.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css" rel="stylesheet" />
     <link rel="stylesheet" href="popup.css" />
+    <title>ClearPolicy</title>
   </head>
-  <body>
-    <div class="popup-box shadow-sm">
-      <button
-        id="close-btn"
-        type="button"
-        class="btn-close close-btn btn-sm"
-        aria-label="Close"
-      ></button>
-
-      <header class="mb-3">
-        <img src="icons/icon.png" alt="ClearPolicy Logo" />
-        <h1 class="text-primary">ClearPolicy</h1>
-      </header>
-
-      <section>
-        <div id="concerns-container"></div>
-      </section>
+  <div class="body">
+  <div class="container">
+    <h4 class="center-align">ClearPolicy</h4>
+  
+    <!-- Overview Section -->
+    <div class="card">
+      <div class="card-content">
+        <span class="card-title">Overview</span>
+        <ul>
+          <li><strong>Critical Concerns:</strong> <span id="critical-count">0</span></li>
+          <li><strong>Moderate Concerns:</strong> <span id="moderate-count">0</span></li>
+          <li><strong>Data Collection Issues:</strong> <span id="data-count">0</span></li>
+          <li><strong>User Rights Limitations:</strong> <span id="rights-count">0</span></li>
+        </ul>
+      </div>
     </div>
-    <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
+  
+    <!-- Filters and Sorting -->
+    <div class="row">
+      <div class="col s6">
+        <label for="filter-concerns">Filter Concerns</label>
+        <select id="filter-concerns" class="browser-default">
+          <option value="" disabled selected>Choose Filter</option>
+          <option value="critical">Critical</option>
+          <option value="moderate">Moderate</option>
+          <option value="data">Data Collection</option>
+          <option value="rights">User Rights</option>
+        </select>
+      </div>
+      <div class="col s6">
+        <label for="sort-concerns">Sort Concerns</label>
+        <select id="sort-concerns" class="browser-default">
+          <option value="" disabled selected>Choose Sorting</option>
+          <option value="severity">Severity</option>
+          <option value="category">Category</option>
+          <option value="date">Date Added</option>
+        </select>
+      </div>
+    </div>
+  
+    <!-- Concerns Section -->
+    <div class="card">
+      <div class="card-content">
+        <span class="card-title">Concerns</span>
+        <div id="concerns-container"></div>
+      </div>
+    </div>
+  
+    <!-- Close Button -->
+    <div class="center-align">
+      <button id="close-btn" class="btn red">Close</button>
+    </div>
+  </div>
+  
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
     <script src="popup.js"></script>
   </body>
 </html>
