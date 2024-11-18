@@ -7,6 +7,12 @@ document.addEventListener('DOMContentLoaded', function () {
 // Function to display concerns in the popup
 function displayConcerns(concerns) {
   const concernsContainer = document.getElementById('concerns-container');
+  const loadingIndicator = document.getElementById('loading-indicator');
+  const errorContainer = document.getElementById('error-container');
+
+  // Hide loading indicator and error container
+  loadingIndicator.style.display = 'none';
+  errorContainer.style.display = 'none';
 
   if (concernsContainer) {
     concernsContainer.innerHTML = ''; // Clear existing content
@@ -22,12 +28,22 @@ function displayConcerns(concerns) {
         titleElement.classList.add('concern-title');
         titleElement.textContent = concern.title;
 
-        const descriptionElement = document.createElement('p');
-        descriptionElement.classList.add('concern-description');
-        descriptionElement.textContent = concern.description;
+        const sectionElement = document.createElement('h5');
+        sectionElement.classList.add('card-title');
+        sectionElement.textContent = concern.section || 'Section';
 
-        concernItem.appendChild(titleElement);
-        concernItem.appendChild(descriptionElement);
+        const quoteElement = document.createElement('p');
+        quoteElement.classList.add('card-text');
+        quoteElement.innerHTML = `<strong>Quote:</strong> "${concern.quote}"`;
+
+        const concernElement = document.createElement('p');
+        concernElement.classList.add('card-text');
+        concernElement.innerHTML = `<strong>Concern:</strong> ${concern.concern}`;
+
+        cardBody.appendChild(sectionElement);
+        cardBody.appendChild(quoteElement);
+        cardBody.appendChild(concernElement);
+        concernItem.appendChild(cardBody);
         concernsContainer.appendChild(concernItem);
       });
     }

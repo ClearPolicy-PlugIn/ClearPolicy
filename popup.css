@@ -30,23 +30,19 @@ header h1 {
   position: absolute;
   top: 10px;
   right: 10px;
-  font-size: 16px;
-  width: 24px;
-  height: 24px;
 }
 
 .concern-item {
   text-align: left;
-  margin-bottom: 15px;
 }
 
-.concern-title {
+.card-title {
   font-size: 1.1rem;
   font-weight: bold;
   color: #dc3545; /* Bootstrap danger color */
 }
 
-.concern-description {
+.card-text {
   font-size: 0.9rem;
   color: #212529;
 }
