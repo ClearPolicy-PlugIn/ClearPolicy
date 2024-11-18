@@ -1,6 +1,6 @@
 {
   "manifest_version": 3,
-  "name": "ClearPolicy: Summarize the Terms & Conditions of Online Services",
+  "name": "ClearPolicy",
   "description": "An extension to summarize Terms of Use and Privacy Policies.",
   "version": "1.0",
   "action": {

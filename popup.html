@@ -20,7 +20,16 @@
       </header>
 
       <section>
-        <div id="concerns-container"></div>
+        <div id="loading-indicator" class="text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+          </div>
+          <p>Analyzing Terms of Use...</p>
+        </div>
+
+        <div id="error-container" class="alert alert-danger" style="display: none;"></div>
+
+        <div id="concerns-container" style="display: none;"></div>
       </section>
     </div>
     <script src="bootstrap/js/bootstrap.bundle.min.js"></script>
