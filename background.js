@@ -15,8 +15,8 @@ function sendMessageToContentScript(tabId, message) {
 async function processTermsContent(termsContent, tabId) {
   console.log("Sending terms content to backend for GPT processing.");
 
-  // Inform the content script that processing has started
-  sendMessageToContentScript(tabId, { action: 'processingStarted' });
+  // Inform the popup that processing has started
+  chrome.runtime.sendMessage({ action: 'processingStarted' });
 
   try {
     const response = await fetch('https://clearpolicy-backend.vercel.app/api/process-terms', {
@@ -37,38 +37,54 @@ async function processTermsContent(termsContent, tabId) {
     const concerns = data.concerns;
 
     if (concerns && concerns.length > 0) {
-      // Store concerns in chrome.storage.local if needed
+      // Store concerns in chrome.storage.local
       chrome.storage.local.set({ concerns }, () => {
         console.log("Concerns stored successfully.");
 
-        // Inform the content script that processing is complete
-        sendMessageToContentScript(tabId, {
+        // Inform the popup that processing is complete
+        chrome.runtime.sendMessage({
           action: 'processingComplete',
           concerns: concerns,
         });
       });
     } else {
       console.error("No concerns received from backend.");
-      sendMessageToContentScript(tabId, {
+      chrome.runtime.sendMessage({
         action: 'processingError',
         message: 'No concerns found in the Terms of Use.',
       });
     }
   } catch (error) {
     console.error("Error processing terms content:", error);
-    sendMessageToContentScript(tabId, {
+    chrome.runtime.sendMessage({
       action: 'processingError',
       message: error.message || 'An error occurred while processing.',
     });
   }
 }
 
-// Listener for messages from content script
+// Listener for messages from content script and popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   if (message.action === 'processTerms') {
     const tabId = sender.tab.id;
     processTermsContent(message.termsContent, tabId);
     sendResponse({ status: 'processingStarted' });
+    return true;
+  } else if (message.action === 'getConcerns') {
+    // Retrieve concerns from storage and send them back
+    chrome.storage.local.get('concerns', (result) => {
+      sendResponse({ concerns: result.concerns });
+    });
+    return true; // Keep the message channel open for sendResponse
+  } else if (message.action === 'clearData') {
+    chrome.storage.local.clear(() => {
+      if (chrome.runtime.lastError) {
+        console.error('Error clearing data:', chrome.runtime.lastError);
+      } else {
+        console.log('All data cleared from chrome.storage.local.');
+      }
+      sendResponse({ status: 'dataCleared' });
+    });
     return true;
   }
 });

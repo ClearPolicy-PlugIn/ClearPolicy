@@ -1,5 +1,64 @@
 // popup.js
 
+document.addEventListener('DOMContentLoaded', () => {
+  // Show loading indicator initially
+  showLoadingIndicator();
+
+  // Retrieve concerns when popup is opened
+  chrome.runtime.sendMessage({ action: 'getConcerns' }, (response) => {
+    if (response && response.concerns) {
+      displayConcerns(response.concerns);
+    } else {
+      // If no concerns, start processing
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        if (tabs && tabs.length > 0) {
+          chrome.scripting.executeScript({
+            target: { tabId: tabs[0].id },
+            files: ['scraper.js'],
+          }, () => {
+            if (chrome.runtime.lastError) {
+              console.error('Error injecting scraper.js:', chrome.runtime.lastError);
+              displayError('Failed to start analysis.');
+            } else {
+              console.log('scraper.js injected successfully.');
+            }
+          });
+        } else {
+          displayError('No active tab found.');
+        }
+      });
+    }
+  });
+
+  // Add event listener for the close button
+  const closeButton = document.getElementById('close-btn');
+  if (closeButton) {
+    closeButton.addEventListener('click', () => {
+      // Clear stored data
+      chrome.runtime.sendMessage({ action: 'clearData' }, (response) => {
+        window.close();
+      });
+    });
+  } else {
+    console.error('Close button not found');
+  }
+});
+
+// Show loading indicator
+function showLoadingIndicator() {
+  const loadingIndicator = document.getElementById('loading-indicator');
+  const concernsContainer = document.getElementById('concerns-container');
+  const errorContainer = document.getElementById('error-container');
+
+  // Show loading indicator
+  loadingIndicator.style.display = 'block';
+
+  // Hide concerns and error container
+  concernsContainer.style.display = 'none';
+  errorContainer.style.display = 'none';
+}
+
+// Function to display concerns
 function displayConcerns(concerns) {
   const concernsContainer = document.getElementById('concerns-container');
   const loadingIndicator = document.getElementById('loading-indicator');
@@ -10,7 +69,7 @@ function displayConcerns(concerns) {
   errorContainer.style.display = 'none';
 
   if (concernsContainer) {
-    concernsContainer.style.display = 'block'; // Add this line to show the container
+    concernsContainer.style.display = 'block'; // Show the container
     concernsContainer.innerHTML = ''; // Clear existing content
 
     if (!concerns || concerns.length === 0) {
@@ -70,58 +129,5 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     displayConcerns(message.concerns);
   } else if (message.action === 'processingError') {
     displayError(message.message);
-  }
-});
-
-// Show loading indicator
-function showLoadingIndicator() {
-  const loadingIndicator = document.getElementById('loading-indicator');
-  const concernsContainer = document.getElementById('concerns-container');
-  const errorContainer = document.getElementById('error-container');
-
-  // Show loading indicator
-  loadingIndicator.style.display = 'block';
-
-  // Hide concerns and error container
-  concernsContainer.style.display = 'none';
-  errorContainer.style.display = 'none';
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  // Show loading indicator initially
-  showLoadingIndicator();
-
-  // Retrieve concerns when popup is opened
-  chrome.runtime.sendMessage({ action: 'getConcerns' }, (response) => {
-    if (response && response.concerns) {
-      displayConcerns(response.concerns);
-    } else {
-      // If no concerns, start processing
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        chrome.scripting.executeScript({
-          target: { tabId: tabs[0].id },
-          files: ['scraper.js'],
-        });
-      });
-    }
-  });
-
-  // Add event listener for the close button
-  const closeButton = document.getElementById('close-btn');
-  if (closeButton) {
-    closeButton.addEventListener('click', () => {
-      // Clear stored data
-      chrome.storage.local.clear(() => {
-        if (chrome.runtime.lastError) {
-          console.error('Error clearing data:', chrome.runtime.lastError);
-        } else {
-          console.log('All data cleared from chrome.storage.local.');
-        }
-        // Close the popup
-        window.close();
-      });
-    });
-  } else {
-    console.error('Close button not found');
   }
 });
