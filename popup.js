@@ -1,8 +1,4 @@
-// Initialize Materialize components
-document.addEventListener('DOMContentLoaded', function () {
-  const selects = document.querySelectorAll('select');
-  M.FormSelect.init(selects);
-});
+// popup.js
 
 function displayConcerns(concerns) {
   const concernsContainer = document.getElementById('concerns-container');
@@ -17,16 +13,15 @@ function displayConcerns(concerns) {
     concernsContainer.style.display = 'block'; // Add this line to show the container
     concernsContainer.innerHTML = ''; // Clear existing content
 
-    if (concerns.length === 0) {
-      concernsContainer.innerHTML = '<p class="center-align">No concerns found.</p>';
+    if (!concerns || concerns.length === 0) {
+      concernsContainer.innerHTML = '<p>No concerns found.</p>';
     } else {
       concerns.forEach(concern => {
         const concernItem = document.createElement('div');
-        concernItem.classList.add('card-panel', 'teal', 'lighten-4', 'concern-item');
+        concernItem.classList.add('concern-item', 'mb-3', 'card');
 
-        const titleElement = document.createElement('h6');
-        titleElement.classList.add('concern-title');
-        titleElement.textContent = concern.title;
+        const cardBody = document.createElement('div');
+        cardBody.classList.add('card-body');
 
         const sectionElement = document.createElement('h5');
         sectionElement.classList.add('card-title');
@@ -47,51 +42,66 @@ function displayConcerns(concerns) {
         concernsContainer.appendChild(concernItem);
       });
     }
+  } else {
+    console.error('concerns-container element is missing in the DOM.');
   }
 }
 
-// Update the overview counts dynamically
-function updateOverview(concerns) {
-  document.getElementById('critical-count').textContent = concerns.filter(c => c.severity === 'critical').length;
-  document.getElementById('moderate-count').textContent = concerns.filter(c => c.severity === 'moderate').length;
-  document.getElementById('data-collection-count').textContent = concerns.filter(c => c.category === 'data-collection').length;
-  document.getElementById('user-rights-count').textContent = concerns.filter(c => c.category === 'user-rights').length;
+// Function to display errors
+function displayError(message) {
+  const loadingIndicator = document.getElementById('loading-indicator');
+  const errorContainer = document.getElementById('error-container');
+  const concernsContainer = document.getElementById('concerns-container');
+
+  // Hide loading indicator and concerns container
+  loadingIndicator.style.display = 'none';
+  concernsContainer.style.display = 'none';
+
+  // Show error message
+  errorContainer.style.display = 'block';
+  errorContainer.textContent = message || 'An error occurred.';
 }
 
-// Fetch and display concerns when popup opens
+// Listener for messages from background script
+chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
+  if (message.action === 'processingStarted') {
+    showLoadingIndicator();
+  } else if (message.action === 'processingComplete') {
+    displayConcerns(message.concerns);
+  } else if (message.action === 'processingError') {
+    displayError(message.message);
+  }
+});
+
+// Show loading indicator
+function showLoadingIndicator() {
+  const loadingIndicator = document.getElementById('loading-indicator');
+  const concernsContainer = document.getElementById('concerns-container');
+  const errorContainer = document.getElementById('error-container');
+
+  // Show loading indicator
+  loadingIndicator.style.display = 'block';
+
+  // Hide concerns and error container
+  concernsContainer.style.display = 'none';
+  errorContainer.style.display = 'none';
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  // Show loading indicator initially
+  showLoadingIndicator();
+
+  // Retrieve concerns when popup is opened
   chrome.runtime.sendMessage({ action: 'getConcerns' }, (response) => {
     if (response && response.concerns) {
-      const concerns = response.concerns;
-
-      // Update the overview counts
-      updateOverview(concerns);
-
-      // Display concerns
-      displayConcerns(concerns);
-
-      // Add filtering functionality
-      const filterSelect = document.getElementById('filter');
-      filterSelect.addEventListener('change', () => {
-        const filterValue = filterSelect.value;
-        const filteredConcerns = filterValue === 'all'
-          ? concerns
-          : concerns.filter(c => c.category === filterValue || c.severity === filterValue);
-        displayConcerns(filteredConcerns);
-      });
-
-      // Add sorting functionality
-      const sortSelect = document.getElementById('sort');
-      sortSelect.addEventListener('change', () => {
-        const sortValue = sortSelect.value;
-        const sortedConcerns = [...concerns];
-
-        if (sortValue === 'severity') {
-          sortedConcerns.sort((a, b) => b.severityLevel - a.severityLevel);
-        } else if (sortValue === 'category') {
-          sortedConcerns.sort((a, b) => a.category.localeCompare(b.category));
-        }
-        displayConcerns(sortedConcerns);
+      displayConcerns(response.concerns);
+    } else {
+      // If no concerns, start processing
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.scripting.executeScript({
+          target: { tabId: tabs[0].id },
+          files: ['scraper.js'],
+        });
       });
     }
   });
@@ -100,12 +110,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const closeButton = document.getElementById('close-btn');
   if (closeButton) {
     closeButton.addEventListener('click', () => {
+      // Clear stored data
       chrome.storage.local.clear(() => {
         if (chrome.runtime.lastError) {
           console.error('Error clearing data:', chrome.runtime.lastError);
         } else {
           console.log('All data cleared from chrome.storage.local.');
         }
+        // Close the popup
         window.close();
       });
     });
