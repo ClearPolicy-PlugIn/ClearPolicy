@@ -11,6 +11,7 @@
 
 header {
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   margin-top: 10px;
@@ -18,7 +19,6 @@ header {
 
 header img {
   width: 50px;
-  margin-right: 10px;
   margin-bottom: 10px;
 }
 
@@ -51,6 +51,15 @@ header h1 {
   margin-top: 20px;
 }
 
+#loading-indicator .spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+#loading-indicator p {
+  margin-top: 10px;
+}
+
 #error-container {
   margin-top: 20px;
 }
@@ -59,4 +68,18 @@ header h1 {
   margin-top: 20px;
   max-height: 400px;
   overflow-y: auto;
+}
+
+.progress {
+  height: 20px;
+  width: 100%;
+  margin-top: 10px;
+}
+
+#progress-bar {
+  width: 0%;
+}
+
+#progress-text {
+  margin-top: 5px;
 }

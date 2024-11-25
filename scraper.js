@@ -10,15 +10,35 @@ async function findAndFetchAllTermsContent() {
   const links = Array.from(document.querySelectorAll('a'));
   console.log("Checking links on the page...");
 
+  // Filter links based on keywords
   const matchedLinks = links.filter(link => {
     const linkText = link.innerText.toLowerCase().trim();
     const linkHref = link.getAttribute('href')?.toLowerCase() || "";
     return termsKeywords.some(keyword => linkText.includes(keyword) || linkHref.includes(keyword));
   });
 
-  if (matchedLinks.length === 0) {
+  console.log(`Matched links count (before deduplication): ${matchedLinks.length}`);
+
+  // Deduplicate links by URL
+  const uniqueLinks = Array.from(
+    new Set(
+      matchedLinks.map(link => {
+        const href = new URL(link.href);
+        href.hash = ""; // Remove hash fragments
+        return href.toString();
+      })
+    )
+  ).map(url => matchedLinks.find(link => link.href.startsWith(url))); // Map back to original link elements
+
+  console.log(`Unique links count (after deduplication): ${uniqueLinks.length}`);
+  uniqueLinks.forEach((link, index) => {
+    console.log(`Unique link ${index + 1}:`);
+    console.log(` - Text: ${link.innerText.trim()}`);
+    console.log(` - URL: ${link.href}`);
+  });
+
+  if (uniqueLinks.length === 0) {
     console.log("No Terms of Use or Privacy Policy links found.");
-    // No UI to update, so simply return
     chrome.runtime.sendMessage({
       action: 'processingError',
       message: 'No Terms of Use or Privacy Policy found on this page.'
@@ -27,8 +47,9 @@ async function findAndFetchAllTermsContent() {
   }
 
   let allTermsContent = '';
+  const fetchedContent = new Set(); // To check for redundant content
 
-  for (const link of matchedLinks) {
+  for (const link of uniqueLinks) {
     try {
       console.log(`Fetching content from URL: ${link.href}`);
       const response = await fetch(link.href);
@@ -38,18 +59,36 @@ async function findAndFetchAllTermsContent() {
       const parser = new DOMParser();
       const doc = parser.parseFromString(htmlContent, "text/html");
 
+      console.log(`Fetched HTML content length from ${link.href}: ${htmlContent.length} characters`);
+
       const cleanText = cleanExtractedText(doc);
-      if (cleanText) {
+      if (cleanText && !fetchedContent.has(cleanText)) {
+        fetchedContent.add(cleanText); // Track unique content
+        console.log(`Cleaned text content length from ${link.href}: ${cleanText.length} characters`);
+        console.log(`Cleaned content preview (first 500 characters):\n${cleanText.slice(0, 500)}\n`);
         allTermsContent += cleanText + '\n';
+      } else if (fetchedContent.has(cleanText)) {
+        console.log(`Skipped redundant content from ${link.href}`);
+      } else {
+        console.log(`No content extracted from ${link.href}`);
       }
     } catch (error) {
       console.error("Error fetching or processing Terms of Use content:", error);
     }
   }
 
+  console.log(`Total aggregated terms content length: ${allTermsContent.length} characters`);
+  console.log(`Aggregated content preview (first 1000 characters):\n${allTermsContent.slice(0, 1000)}\n`);
+
   if (allTermsContent) {
-    // Send terms content to the background script for processing
-    sendTermsToBackground(allTermsContent);
+    // Send the content to background script for processing
+    chrome.runtime.sendMessage({ action: 'processContent', content: allTermsContent }, response => {
+      if (chrome.runtime.lastError) {
+        console.error('Error sending message to background script:', chrome.runtime.lastError);
+      } else {
+        console.log('Processing started in background script.');
+      }
+    });
   } else {
     console.error("No Terms content extracted.");
     chrome.runtime.sendMessage({
@@ -61,27 +100,12 @@ async function findAndFetchAllTermsContent() {
 
 // Helper to clean and extract text from a document node
 function cleanExtractedText(doc) {
-  const elementsToRemove = ['script', 'style', 'noscript', 'meta', 'link', 'header', 'footer', 'nav', 'aside'];
+  const elementsToRemove = ['script', 'style', 'noscript', 'meta', 'link'];
   elementsToRemove.forEach(tag => doc.querySelectorAll(tag).forEach(element => element.remove()));
 
-  const contentBlocks = Array.from(doc.querySelectorAll('div, article, section, main'));
-  const largestBlock = contentBlocks.reduce((largest, block) => {
-    return block.innerText.length > largest.innerText.length ? block : largest;
-  }, { innerText: "" });
-
-  const cleanText = largestBlock.innerText.trim();
-  return cleanText || null;
-}
-
-// Send extracted content to background.js
-function sendTermsToBackground(content) {
-  chrome.runtime.sendMessage({ action: 'processTerms', termsContent: content }, response => {
-    if (chrome.runtime.lastError) {
-      console.error('Error sending message to background script:', chrome.runtime.lastError);
-    } else {
-      console.log('Processing started in background script.');
-    }
-  });
+  const bodyText = doc.body.innerText.trim();
+  console.log(`Cleaned body text length: ${bodyText.length} characters`);
+  return bodyText || null;
 }
 
 // Start the process

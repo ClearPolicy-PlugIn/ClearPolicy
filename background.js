@@ -1,61 +1,122 @@
 // background.js
 
-// Helper function to send messages safely
-function sendMessageToContentScript(tabId, message) {
-  chrome.tabs.sendMessage(tabId, message, (response) => {
-    if (chrome.runtime.lastError) {
-      console.warn('Error sending message to content script:', chrome.runtime.lastError);
+let totalChunks = 0;
+let processedChunks = 0;
+let accumulatedConcerns = [];
+
+// Function to chunk text into smaller pieces
+function chunkText(text, maxChunkSize = 5000) {
+  const chunks = [];
+  let start = 0;
+  while (start < text.length) {
+    let end = start + maxChunkSize;
+    if (end > text.length) {
+      end = text.length;
     } else {
-      // Handle response if necessary
+      // Avoid splitting in the middle of a sentence
+      const lastPeriod = text.lastIndexOf('.', end);
+      if (lastPeriod > start) {
+        end = lastPeriod + 1;
+      }
     }
-  });
+    chunks.push(text.slice(start, end).trim());
+    start = end;
+  }
+  return chunks;
 }
 
-// Process terms content by sending it to the backend for GPT processing
-async function processTermsContent(termsContent, tabId) {
-  console.log("Sending terms content to backend for GPT processing.");
-
-  // Inform the popup that processing has started
-  chrome.runtime.sendMessage({ action: 'processingStarted' });
+// Process a single chunk by sending it to the backend
+async function processChunk(chunkContent) {
+  console.log(`Sending chunk to backend for GPT processing. Chunk length: ${chunkContent.length} characters`);
 
   try {
     const response = await fetch('https://clearpolicy-backend.vercel.app/api/process-terms', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ termsContent }),
+      body: JSON.stringify({ chunkContent }),
     });
 
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Error from backend:", errorData);
-      throw new Error(`Backend error: ${errorData.error}`);
+    console.log('Received response from backend');
+    console.log('Response status:', response.status);
+    console.log('Response headers:', [...response.headers]);
+
+    // Read response based on Content-Type
+    const contentType = response.headers.get('content-type');
+    let responseData;
+
+    if (contentType && contentType.includes('application/json')) {
+      responseData = await response.json();
+    } else {
+      responseData = await response.text();
     }
 
-    const data = await response.json();
-    console.log("Full GPT response received from backend.");
+    console.log('Response data:', responseData); // Log the response body
 
-    const concerns = data.concerns;
+    if (!response.ok) {
+      // Handle non-JSON error responses
+      const errorMessage = typeof responseData === 'string' ? responseData : 'Unknown error';
+      console.error("Error from backend:", errorMessage);
 
-    if (concerns && concerns.length > 0) {
+      chrome.runtime.sendMessage({
+        action: 'processingError',
+        message: `Backend error: ${response.status} ${response.statusText}`,
+      });
+
+      return; // Exit the function after handling the error
+    }
+
+    // Ensure responseData is an object
+    if (typeof responseData !== 'object') {
+      try {
+        responseData = JSON.parse(responseData);
+      } catch (parseError) {
+        console.error("Failed to parse response as JSON:", responseData);
+        chrome.runtime.sendMessage({
+          action: 'processingError',
+          message: 'Invalid response from backend.',
+        });
+        return;
+      }
+    }
+
+    console.log("Chunk processing complete.");
+
+    const concerns = responseData.concerns || [];
+
+    if (concerns.length > 0) {
+      accumulatedConcerns = accumulatedConcerns.concat(concerns);
+
+      // Send updated concerns to the popup immediately
+      chrome.runtime.sendMessage({
+        action: 'updateConcerns',
+        concerns: accumulatedConcerns,
+      });
+    }
+
+    processedChunks++;
+
+    // Update popup with progress
+    chrome.runtime.sendMessage({
+      action: 'processingProgress',
+      totalChunks: totalChunks,
+      processedChunks: processedChunks,
+    });
+
+    // Check if all chunks are processed
+    if (processedChunks === totalChunks) {
       // Store concerns in chrome.storage.local
-      chrome.storage.local.set({ concerns }, () => {
-        console.log("Concerns stored successfully.");
+      chrome.storage.local.set({ concerns: accumulatedConcerns }, () => {
+        console.log("All concerns stored successfully.");
 
         // Inform the popup that processing is complete
         chrome.runtime.sendMessage({
           action: 'processingComplete',
-          concerns: concerns,
+          concerns: accumulatedConcerns,
         });
-      });
-    } else {
-      console.error("No concerns received from backend.");
-      chrome.runtime.sendMessage({
-        action: 'processingError',
-        message: 'No concerns found in the Terms of Use.',
       });
     }
   } catch (error) {
-    console.error("Error processing terms content:", error);
+    console.error("Error processing chunk content:", error);
     chrome.runtime.sendMessage({
       action: 'processingError',
       message: error.message || 'An error occurred while processing.',
@@ -65,17 +126,44 @@ async function processTermsContent(termsContent, tabId) {
 
 // Listener for messages from content script and popup
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message.action === 'processTerms') {
-    const tabId = sender.tab.id;
-    processTermsContent(message.termsContent, tabId);
+  console.log('Received message in background script:', message);
+
+  if (message.action === 'processContent') {
+    const allTermsContent = message.content;
+    console.log(`Received content for processing. Length: ${allTermsContent.length} characters`);
+
+    // Chunk the content
+    const chunks = chunkText(allTermsContent, 10000); // Adjust chunk size as needed
+    console.log(`Total chunks created: ${chunks.length}`);
+    chunks.forEach((chunk, index) => {
+      console.log(`Chunk ${index + 1} length: ${chunk.length} characters`);
+    });
+
+    totalChunks = chunks.length;
+    processedChunks = 0;
+    accumulatedConcerns = [];
+
+    // Inform the popup that processing has started
+    chrome.runtime.sendMessage({ action: 'processingStarted', totalChunks: totalChunks });
+
+    // Process chunks sequentially
+    (async function processAllChunks() {
+      for (const chunk of chunks) {
+        console.log(`Processing chunk ${processedChunks + 1} of ${totalChunks}. Chunk length: ${chunk.length} characters`);
+        await processChunk(chunk);
+      }
+    })();
+
     sendResponse({ status: 'processingStarted' });
-    return true;
+    return true; // Keep the message channel open for async sendResponse
+
   } else if (message.action === 'getConcerns') {
     // Retrieve concerns from storage and send them back
     chrome.storage.local.get('concerns', (result) => {
       sendResponse({ concerns: result.concerns });
     });
     return true; // Keep the message channel open for sendResponse
+
   } else if (message.action === 'clearData') {
     chrome.storage.local.clear(() => {
       if (chrome.runtime.lastError) {
