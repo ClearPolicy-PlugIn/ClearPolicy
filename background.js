@@ -5,7 +5,7 @@ let processedChunks = 0;
 let accumulatedConcerns = [];
 
 // Function to chunk text into smaller pieces
-function chunkText(text, maxChunkSize = 5000) {
+function chunkText(text, maxChunkSize = 3000) {
   const chunks = [];
   let start = 0;
   while (start < text.length) {
@@ -53,16 +53,35 @@ async function processChunk(chunkContent) {
     console.log('Response data:', responseData); // Log the response body
 
     if (!response.ok) {
-      // Handle non-JSON error responses
-      const errorMessage = typeof responseData === 'string' ? responseData : 'Unknown error';
-      console.error("Error from backend:", errorMessage);
+      // Log error
+      console.error("Error from backend:", response.status, response.statusText);
 
+      // Increment processedChunks
+      processedChunks++;
+
+      // Update popup with progress
       chrome.runtime.sendMessage({
-        action: 'processingError',
-        message: `Backend error: ${response.status} ${response.statusText}`,
+        action: 'processingProgress',
+        totalChunks: totalChunks,
+        processedChunks: processedChunks,
       });
 
-      return; // Exit the function after handling the error
+      // Check if all chunks are processed
+      if (processedChunks === totalChunks) {
+        // Store concerns in chrome.storage.local
+        chrome.storage.local.set({ concerns: accumulatedConcerns }, () => {
+          console.log("All concerns stored successfully.");
+
+          // Inform the popup that processing is complete
+          chrome.runtime.sendMessage({
+            action: 'processingComplete',
+            concerns: accumulatedConcerns,
+          });
+        });
+      }
+
+      // Return to proceed to next chunk
+      return;
     }
 
     // Ensure responseData is an object
@@ -71,10 +90,31 @@ async function processChunk(chunkContent) {
         responseData = JSON.parse(responseData);
       } catch (parseError) {
         console.error("Failed to parse response as JSON:", responseData);
+
+        // Increment processedChunks
+        processedChunks++;
+
+        // Update popup with progress
         chrome.runtime.sendMessage({
-          action: 'processingError',
-          message: 'Invalid response from backend.',
+          action: 'processingProgress',
+          totalChunks: totalChunks,
+          processedChunks: processedChunks,
         });
+
+        // Check if all chunks are processed
+        if (processedChunks === totalChunks) {
+          // Store concerns in chrome.storage.local
+          chrome.storage.local.set({ concerns: accumulatedConcerns }, () => {
+            console.log("All concerns stored successfully.");
+
+            // Inform the popup that processing is complete
+            chrome.runtime.sendMessage({
+              action: 'processingComplete',
+              concerns: accumulatedConcerns,
+            });
+          });
+        }
+
         return;
       }
     }
@@ -93,6 +133,7 @@ async function processChunk(chunkContent) {
       });
     }
 
+    // Increment processedChunks
     processedChunks++;
 
     // Update popup with progress
@@ -117,10 +158,32 @@ async function processChunk(chunkContent) {
     }
   } catch (error) {
     console.error("Error processing chunk content:", error);
+
+    // Increment processedChunks
+    processedChunks++;
+
+    // Update popup with progress
     chrome.runtime.sendMessage({
-      action: 'processingError',
-      message: error.message || 'An error occurred while processing.',
+      action: 'processingProgress',
+      totalChunks: totalChunks,
+      processedChunks: processedChunks,
     });
+
+    // Check if all chunks are processed
+    if (processedChunks === totalChunks) {
+      // Store concerns in chrome.storage.local
+      chrome.storage.local.set({ concerns: accumulatedConcerns }, () => {
+        console.log("All concerns stored successfully.");
+
+        // Inform the popup that processing is complete
+        chrome.runtime.sendMessage({
+          action: 'processingComplete',
+          concerns: accumulatedConcerns,
+        });
+      });
+    }
+
+    // Do not display the error to the user; proceed to next chunk
   }
 }
 

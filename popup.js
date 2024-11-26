@@ -17,17 +17,20 @@ document.addEventListener('DOMContentLoaded', () => {
       // If no concerns, start processing
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs && tabs.length > 0) {
-          chrome.scripting.executeScript({
-            target: { tabId: tabs[0].id },
-            files: ['scraper.js'],
-          }, () => {
-            if (chrome.runtime.lastError) {
-              console.error('Error injecting scraper.js:', chrome.runtime.lastError);
-              displayError('Failed to start analysis.');
-            } else {
-              console.log('scraper.js injected successfully.');
+          chrome.scripting.executeScript(
+            {
+              target: { tabId: tabs[0].id },
+              files: ['scraper.js'],
+            },
+            () => {
+              if (chrome.runtime.lastError) {
+                console.error('Error injecting scraper.js:', chrome.runtime.lastError);
+                displayError('Failed to start analysis.');
+              } else {
+                console.log('scraper.js injected successfully.');
+              }
             }
-          });
+          );
         } else {
           displayError('No active tab found.');
         }
@@ -77,14 +80,10 @@ function displayConcerns(concerns) {
   const concernsContainer = document.getElementById('concerns-container');
   const loadingIndicator = document.getElementById('loading-indicator');
   const errorContainer = document.getElementById('error-container');
-  const progressBarContainer = document.getElementById('progress-bar-container');
-  const progressText = document.getElementById('progress-text');
 
   // Hide loading indicator and error container
   loadingIndicator.style.display = 'none';
   errorContainer.style.display = 'none';
-  progressBarContainer.style.display = 'none'; // Hide progress bar when displaying concerns
-  progressText.style.display = 'none';
 
   if (concernsContainer) {
     concernsContainer.style.display = 'block'; // Show the container
@@ -93,7 +92,7 @@ function displayConcerns(concerns) {
     if (!concerns || concerns.length === 0) {
       concernsContainer.innerHTML = '<p>No concerns found.</p>';
     } else {
-      concerns.forEach(concern => {
+      concerns.forEach((concern) => {
         const concernItem = document.createElement('div');
         concernItem.classList.add('concern-item', 'mb-3', 'card');
 
@@ -148,7 +147,18 @@ function updateProgress(processed, total) {
   const progressBar = document.getElementById('progress-bar');
   const progressText = document.getElementById('progress-text');
 
-  const percentage = Math.floor((processed / total) * 100);
+  let percentage = 0;
+  if (total > 0) {
+    percentage = Math.floor((processed / total) * 100);
+  }
+  // Log values for debugging
+  console.log(`Processed: ${processed}, Total: ${total}, Percentage: ${percentage}%`);
+
+  // Ensure percentage is between 0 and 100
+  if (percentage < 0) percentage = 0;
+  if (percentage > 100) percentage = 100;
+
+  // Set width
   progressBar.style.width = `${percentage}%`;
   progressBar.setAttribute('aria-valuenow', percentage);
   progressText.textContent = `Processing ${processed} of ${total} chunks...`;
@@ -163,6 +173,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     showLoadingIndicator();
     updateProgress(processedChunks, totalChunks);
   } else if (message.action === 'processingProgress') {
+    totalChunks = message.totalChunks;
     processedChunks = message.processedChunks;
     updateProgress(processedChunks, totalChunks);
   } else if (message.action === 'updateConcerns') {
