@@ -80,9 +80,9 @@ ClearPolicy is a lightweight Chrome extension designed to simplify the way users
 
 | Company                | Screenshot                              |
 |------------------------|-----------------------------------------|
-| **Disney**             | ![Disney](https://github.com/MitChaudhari/ClearPolicy.git/raw/main/src/assets/app_ss/disney.png) |
-| **McDonalds**          | ![McDonalds](https://github.com/MitChaudhari/ClearPolicy.git/raw/main/src/assets/app_ss/mcdonalds#1.png) ![McDonalds](https://github.com/MitChaudhari/ClearPolicy.git/raw/main/src/assets/app_ss/mcdonalds#2.png) |
-| **PayPal**             | ![PayPal](https://github.com/MitChaudhari/ClearPolicy.git/raw/main/src/assets/app_ss/disney.png) |
+| **Disney**             | ![Disney](https://github.com/MitChaudhari/ClearPolicy/raw/main/src/assets/app_ss/disney.png) |
+| **McDonalds**          | ![McDonalds](https://github.com/MitChaudhari/ClearPolicy/raw/main/src/assets/app_ss/mcdonalds.png) |
+| **PayPal**             | ![PayPal](https://github.com/MitChaudhari/ClearPolicy/raw/main/src/assets/app_ss/paypal.png) |
 
 ---
 
