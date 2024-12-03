@@ -1,86 +1,134 @@
 
 # ClearPolicy Chrome Extension
 
-ClearPolicy is a lightweight Chrome extension that automatically detects privacy policies on websites and provides a simplified summary using the Claude.ai. The extension enhances user experience by helping users quickly understand what they're agreeing to when signing up for online services.
+ClearPolicy is a lightweight Chrome extension designed to simplify the way users interact with complex privacy policies and terms & conditions. It empowers users to make informed decisions about signing up for online services by identifying and summarizing problematic or concerning clauses.
 
-## Features
+---
 
-- **Automatic Detection**: Instantly detects when a privacy policy is present on a web page.
-- **Simplified Summaries**: Provides a clear and concise summary of the privacy policy using OpenAI.
-- **Seamless Integration**: The summary is displayed in a clean, user-friendly popup within the browser.
+## 🚀 Features
 
-## Installation
+- **One-Click Activation**: Users can click on the extension when visiting a webpage with a Terms of Use or Privacy Policy to view the significant concerns.
+- **Simplified Summaries**: Provides clear and concise explanations of the most critical issues using OpenAI's advanced capabilities.
+- **Customizable Backend**: Deploy your own backend with OpenAI to personalize the extension.
+- **Secure and Private**: No data is stored or shared; processing occurs through your own hosted backend.
 
-### From Source
+---
 
-1. **Clone the Repository**
+## 📥 Installation
 
-   Clone this repository to your local machine:
+### 1. Clone the Repository
 
    ```bash
-   git clone https://github.com/ClearPolicy-PlugIn/ClearPolicy.git
-
+   git clone https://github.com/MitChaudhari/ClearPolicy.git
    cd ClearPolicy
    ```
 
-2. **Load the Extension in Chrome**
+### 2. Load the Extension in Chrome
 
-   1. Open Chrome and go to `chrome://extensions/`.
+   1. Open Chrome and navigate to `chrome://extensions/`.
    2. Enable "Developer mode" in the top right corner.
    3. Click on "Load unpacked" and select the `ClearPolicy` directory.
 
-3. **You're All Set!**
+### 3. Set Up Your Backend
 
-   The ClearPolicy extension should now be active in your Chrome browser. You should see the ClearPolicy icon in your Chrome toolbar.
+   To use ClearPolicy, you must set up your backend:
 
-## Usage
+   1. **Create a Next.js Project**:
+      ```bash
+      npx create-next-app@latest
+      cd your-nextjs-project
+      ```
+   2. **Add the Backend Code**:
+      - Copy the `api/process-terms.js` file from cloned repository and place it as `api/process-terms.js` in your Next.js project.
 
-1. **Browse the Web**: Simply navigate to any website with a privacy policy.
-2. **Automatic Detection**: When a privacy policy is detected, the ClearPolicy icon will activate, and a popup will appear.
-3. **View Summary**: Click on the ClearPolicy icon to view a simplified summary of the privacy policy.
+   3. **Add Your OpenAI API Key**:
+      - Create a `.env` file in the project root and add your OpenAI API key:
+        ```
+        OPENAI_API_KEY=your_openai_api_key_here
+        ```
 
-## Development
+   4. **Deploy to Vercel**:
+      - Push your project to GitHub.
+      - Connect your GitHub repository to [Vercel](https://vercel.com/) and deploy.
+      - Add your OpenAI API key to the environment variables on Vercel.
 
-### Prerequisites
+   5. **Update `background.js`**:
+      - Replace the URL in `background.js` (line 33) with your Vercel live URL, appending `/api/process-terms`:
+        ```javascript
+        const response = await fetch('https://your-vercel-backend-url/api/process-terms', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ chunkContent }),
+        });
+        ```
 
-- **Node.js**: Make sure you have Node.js installed on your machine.
+### 4. You're All Set!
 
-### Setting Up the Project
+   The ClearPolicy extension should now be ready for use in your Chrome browser.
 
-1. **Install Dependencies**
+---
 
-   ```bash
-   npm install
-   ```
+## 🔧 Usage
 
-2. **Load the Extension**
+1. **Navigate to a Website**: Visit any webpage with a Terms of Use or Privacy Policy.
+2. **Click the Extension**: Activate the extension by clicking on the ClearPolicy icon in your toolbar.
+3. **View the Summary**: A popup will display the most significant concern identified in the Terms of Use.
 
-   Follow the steps in the "Installation" section to load the extension in Chrome for local development and testing.
-3. Start the server to parse the code effectively
+---
 
-   ```bash
-   npm start
-   ```
-### Project Structure
+## 🖼️ Application Screenshots
 
-```plaintext
-ClearPolicy/
-│
-├── .gitignore            # Ignored files for Git
-├── manifest.json         # Chrome extension configuration
-├── background.js         # Background script
-├── content.js            # Content script
-├── popup.html            # Popup HTML
-├── popup.js              # Popup JS
-├── popup.css             # Popup CSS
-├── icons/                # Extension icons
-│   ├── icon16.png
-│   ├── icon48.png
-│   └── icon128.png
-└── utils/
-    └── api.js            # OpenAI interaction script
-```
+| Company                | Screenshot                              |
+|------------------------|-----------------------------------------|
+| **Disney**             | ![Disney](https://github.com/MitChaudhari/ClearPolicy.git/raw/main/src/assets/app_ss/disney.png) |
+| **McDonalds**          | ![McDonalds](https://github.com/MitChaudhari/ClearPolicy.git/raw/main/src/assets/app_ss/mcdonalds#1.png) ![McDonalds](https://github.com/MitChaudhari/ClearPolicy.git/raw/main/src/assets/app_ss/mcdonalds#2.png) |
+| **PayPal**             | ![PayPal](https://github.com/MitChaudhari/ClearPolicy.git/raw/main/src/assets/app_ss/disney.png) |
 
-## License
+---
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
+## 💡 Tips for Customization
+
+- **Modify the Prompt**: You can adjust the prompt in `process-terms.js` to cater to your specific needs. For example:
+  - Focus on clauses that involve **financial liability or monetary obligations**.
+  - Highlight terms that may **limit user rights or legal recourse**.
+  - Emphasize **data collection and sharing practices** that could compromise privacy.
+  - Specify **user-friendly language** to ensure non-technical users can understand the summary.
+
+  ### Example Modifications:
+  1. To focus on financial concerns:
+     ```javascript
+     {
+       role: "user",
+       content: `As a legal expert reviewing a Terms of Use document, identify clauses related to financial liabilities, hidden fees, or payment obligations that could deter users from signing up. Highlight only the clauses with significant financial impact.`
+     }
+     ```
+
+  2. To emphasize user rights:
+     ```javascript
+     {
+       role: "user",
+       content: `As a legal expert reviewing a Terms of Use document, identify sections that excessively limit user rights, including restrictions on account termination, refund policies, or arbitration clauses. Focus on the clauses that may cause the most concern for users.`
+     }
+     ```
+
+  3. To address privacy concerns:
+     ```javascript
+     {
+       role: "user",
+       content: `As a legal expert reviewing a Privacy Policy, identify clauses that involve excessive data collection, invasive tracking methods, or sharing personal data with third parties. Focus on practices that could violate user privacy expectations.`
+     }
+     ```
+
+- **Experiment and Iterate**: Test different prompts to see what works best for your use case and refine them based on feedback or the type of summaries you need.
+
+---
+
+## 📜 License
+
+This project is licensed under the **MIT License**.
+
+---
+
+## 🛡️ Disclaimer
+
+ClearPolicy does not store or share any data. All processing occurs locally or through your own hosted backend.

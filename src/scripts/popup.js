@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
           chrome.scripting.executeScript(
             {
               target: { tabId: tabs[0].id },
-              files: ['scraper.js'],
+              files: ['src/scripts/scraper.js'],
             },
             () => {
               if (chrome.runtime.lastError) {

@@ -30,7 +30,7 @@ async function processChunk(chunkContent) {
   console.log(`Sending chunk to backend for GPT processing. Chunk length: ${chunkContent.length} characters`);
 
   try {
-    const response = await fetch('https://clearpolicy-backend.vercel.app/api/process-terms', {
+    const response = await fetch('https://clearpolicy-backend.vercel.app/api/process-terms', { // Update this URL with live hosted provided
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ chunkContent }),

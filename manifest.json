@@ -4,11 +4,11 @@
   "description": "An extension to summarize Terms of Use and Privacy Policies.",
   "version": "1.0",
   "action": {
-    "default_popup": "popup.html",
-    "default_icon": "icons/icon.png"
+    "default_popup": "src/components/popup.html",
+    "default_icon": "src/assets/icons/icon.png"
   },
   "background": {
-    "service_worker": "background.js"
+    "service_worker": "src/scripts/background.js"
   },
   "permissions": [
     "activeTab",
